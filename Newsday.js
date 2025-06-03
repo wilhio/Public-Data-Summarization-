@@ -125,11 +125,12 @@ class LongBeachWebAI {
             }
 
             const prompt = query ? 
-                `Based on this Long Beach government website page, answer the query: "${query}"\n\nPage Title: ${pageData.title}\nPage URL: ${pageData.url}\nContent: ${contentText.substring(0, 4000)}` :
-                `Summarize this Long Beach government website page in 2-3 sentences, focusing on key services and information:\n\nPage Title: ${pageData.title}\nContent: ${contentText.substring(0, 4000)}`;
+                `You are a helpful and friendly representative of the Long Beach, New York community. Your role is to assist anyone seeking information about Long Beach in a way that is warm, welcoming, and accurate. 
+                 Respond clearly and concisely. Avoid over-explaining or being vague—your answers should be direct, helpful, and respectful of the user's time. "${query}"\n\nPage Title: ${pageData.title}\nPage URL: ${pageData.url}\nContent: ${contentText.substring(0, 4000)}` :
+                `Use the following information from the official Long Beach government website to answer this question:\n\nPage Title: ${pageData.title}\nContent: ${contentText.substring(0, 4000)}`;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
+                model: "gpt-4.1-2025-04-14",
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 250,
                 temperature: 0.7
@@ -260,30 +261,31 @@ class LongBeachWebAI {
     }
 
     displayResults(results) {
-        results.forEach((result, index) => {
-            console.log(`\n${'='.repeat(70)}`);
-            console.log(`RESULT ${index + 1}: ${result.title}`);
-            console.log(`Category: ${result.category || 'general'} | Words: ${result.wordCount}`);
-            console.log(`URL: ${result.url}`);
-            
-            console.log(`\nAI Summary:`);
-            console.log(result.summary);
-            
-            if (result.context) {
-                console.log(`\nContext:`);
-                console.log(`"...${result.context}..."`);
+        if (results.length === 0) return;
+        
+        const result = results[0];
+        console.log(`\n${'='.repeat(70)}`);
+        console.log(`RESULT: ${result.title}`);
+        console.log(`Category: ${result.category || 'general'} | Words: ${result.wordCount}`);
+        console.log(`URL: ${result.url}`);
+        
+        console.log(`\nAI Summary:`);
+        console.log(result.summary);
+        
+        if (result.context) {
+            console.log(`\nContext:`);
+            console.log(`"...${result.context}..."`);
+        }
+        
+        if (result.contactInfo && (result.contactInfo.phones.length > 0 || result.contactInfo.emails.length > 0)) {
+            console.log(`\nContact Information:`);
+            if (result.contactInfo.phones.length > 0) {
+                console.log(`   Phone: ${result.contactInfo.phones.join(', ')}`);
             }
-            
-            if (result.contactInfo && (result.contactInfo.phones.length > 0 || result.contactInfo.emails.length > 0)) {
-                console.log(`\nContact Information:`);
-                if (result.contactInfo.phones.length > 0) {
-                    console.log(`   Phone: ${result.contactInfo.phones.join(', ')}`);
-                }
-                if (result.contactInfo.emails.length > 0) {
-                    console.log(`   Email: ${result.contactInfo.emails.join(', ')}`);
-                }
+            if (result.contactInfo.emails.length > 0) {
+                console.log(`   Email: ${result.contactInfo.emails.join(', ')}`);
             }
-        });
+        }
         console.log(`\n${'='.repeat(70)}`);
     }
 
@@ -297,75 +299,24 @@ class LongBeachWebAI {
         console.log('\n' + '='.repeat(70));
         console.log('LONG BEACH WEB AI - GOVERNMENT INFORMATION SYSTEM');
         console.log('='.repeat(70));
-        console.log('Available Commands:');
-        console.log('  [search term] - Search all website content');
-        console.log('  gov [search term] - Search government pages');
-        console.log('  dept [search term] - Search department pages');
-        console.log('  community [search term] - Search community content');
-        console.log('  business [search term] - Search business information');
-        console.log('  help [search term] - Search how-to guides');
-        console.log('  explore [search term] - Search explore section');
-        console.log('  quick [search term] - Search quick connect');
-        console.log('  refresh - Update scraped website data');
-        console.log('  status - Show content summary');
-        console.log('  exit - Quit the system');
+        console.log('Type your question and press Enter. Type "exit" to quit.');
         console.log('='.repeat(70));
 
         const askQuestion = () => {
-            rl.question('\nYour query: ', async (input) => {
-                const parts = input.trim().split(' ');
-                const command = parts[0].toLowerCase();
-                const query = parts.slice(1).join(' ');
-
-                if (command === 'exit') {
+            rl.question('\nYour question: ', async (input) => {
+                if (input.toLowerCase() === 'exit') {
                     console.log('\nGoodbye! Thanks for using Long Beach Web AI!');
                     rl.close();
                     return;
                 }
 
-                if (command === 'refresh') {
-                    await this.refreshScrapedData();
+                if (!input.trim()) {
+                    console.log('Please enter a question.');
                     askQuestion();
                     return;
                 }
 
-                if (command === 'status') {
-                    this.displayContentSummary();
-                    askQuestion();
-                    return;
-                }
-
-                let filterCategory = 'all';
-                let searchQuery = input.trim();
-
-                const categoryMap = {
-                    'gov': 'government',
-                    'dept': 'department',
-                    'community': 'community',
-                    'business': 'business',
-                    'help': 'how-to',
-                    'explore': 'explore',
-                    'quick': 'quick-connect'
-                };
-
-                if (categoryMap[command]) {
-                    if (!query) {
-                        console.log('Please provide a search term after the category.');
-                        askQuestion();
-                        return;
-                    }
-                    
-                    filterCategory = categoryMap[command];
-                    searchQuery = query;
-                }
-
-                if (!searchQuery) {
-                    console.log('Please enter a search query.');
-                    askQuestion();
-                    return;
-                }
-
-                const results = await this.queryDocuments(searchQuery, filterCategory);
+                const results = await this.queryDocuments(input.trim());
                 
                 if (typeof results === 'string') {
                     console.log(results);
