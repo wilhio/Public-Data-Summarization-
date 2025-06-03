@@ -17,4 +17,18 @@ Thumbs.db
 .idea/
 
 # Temporary files
-*.tmp 
+*.tmp
+
+# Data files
+longbeach_complete_scrape.json
+processing_results.json
+scraping_report.json
+data_scrap.js
+Data_Folder.txt
+package-lock.json
+
+# Keep only these files visible
+!README.md
+!Newsday.js
+!package.json
+!LICENSE 
