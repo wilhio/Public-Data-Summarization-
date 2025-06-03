@@ -4,12 +4,8 @@ An AI-powered system for analyzing and querying city council agenda documents us
 
 ## Features
 
-- **Automatic PDF Processing**: Extracts text from all PDF files in the `city_council_agendas` directory
-- **Intelligent Search**: Search by topics, dates, or specific agenda items
-- **AI-Powered Summaries**: Get context-aware summaries for your queries
-- **Incremental Processing**: Only processes new files on subsequent runs
-- **Document Statistics**: View comprehensive stats about your agenda collection
-- **Interactive Query Interface**: Real-time question-and-answer system
+
+- **Interactive Query Interface**: A real-time Q&A system designed to provide helpful, accurate guidance for anyone seeking information about Long Beach New York. 
 
 ## Setup
 
